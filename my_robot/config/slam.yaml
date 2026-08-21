@@ -1,0 +1,13 @@
+slam_toolbox:
+  ros__parameters:
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    resolution: 0.05
+    max_laser_range: 6.0         # A1M8 max range
+    minimum_travel_distance: 0.1
+    minimum_travel_heading: 0.1
+    map_update_interval: 1.0
+    scan_topic: /scan
+    use_scan_matching: true
+    mode: mapping

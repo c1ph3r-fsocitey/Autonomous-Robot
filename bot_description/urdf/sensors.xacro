@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+  Sensor frames.
+
+  laser_frame  - must match the `frame_id` parameter given to rplidar_ros
+                 (bot_bringup/config/rplidar.yaml).
+  imu_link     - must match IMU_FRAME_ID in the ESP32 firmware's config.h.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ================= RPLidar A1M8 ================= -->
+  <link name="laser_frame">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.0355" length="0.041"/></geometry>
+      <material name="lidar_teal"/>
+    </visual>
+    <collision>
+      <geometry><cylinder radius="0.0355" length="0.041"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="0.170" radius="0.0355" length="0.041">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="laser_frame"/>
+    <origin xyz="${lidar_x} ${lidar_y} ${lidar_z}" rpy="0 0 ${lidar_yaw}"/>
+  </joint>
+
+  <!-- ================= MPU6050 ================= -->
+  <link name="imu_link">
+    <visual>
+      <geometry><box size="0.020 0.016 0.003"/></geometry>
+      <material name="imu_amber"/>
+    </visual>
+    <xacro:inertial_box mass="0.005" x="0.020" y="0.016" z="0.003">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="imu_link"/>
+    <!-- If the MPU6050 is glued down rotated, put the rotation in the rpy here
+         AND leave the firmware axes alone - one place to get it wrong is
+         better than two. -->
+    <origin xyz="${imu_x} ${imu_y} ${imu_z}" rpy="0 0 0"/>
+  </joint>
+
+</robot>

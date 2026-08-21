@@ -1,0 +1,87 @@
+# =============================================================================
+#  robot_localization EKF  --  fuses wheel odometry with the MPU6050 gyro
+#  and publishes the odom -> base_footprint transform.
+#
+#  Why bother, when diff_drive_controller already produces odometry?
+#  Because wheel odometry's heading drifts badly on a small robot: any wheel
+#  slip goes straight into yaw. The MPU6050's yaw rate is far better over
+#  short horizons, so we take x-velocity from the wheels and yaw rate from
+#  the gyro. That combination is what makes SLAM converge nicely.
+# =============================================================================
+
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: false
+
+    frequency: 30.0
+    sensor_timeout: 0.2
+    two_d_mode: true            # planar robot: z, roll, pitch are pinned to 0
+    publish_tf: true
+    publish_acceleration: false
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom           # odom-frame EKF: continuous, no jumps
+
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+
+    # ------------------------------------------------------------------------
+    # Config vectors are ordered:
+    #   x,     y,     z,
+    #   roll,  pitch, yaw,
+    #   vx,    vy,    vz,
+    #   vroll, vpitch, vyaw,
+    #   ax,    ay,    az
+    # ------------------------------------------------------------------------
+
+    # --- wheel odometry: trust vx only --------------------------------------
+    # We deliberately do NOT fuse the wheel-derived yaw or yaw rate; that is
+    # the gyro's job. Fusing both makes the EKF average a good signal with a
+    # bad one.
+    odom0: /diff_drive_controller/odom
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  false, false,
+                   false, false, false,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_differential: false
+    odom0_relative: false
+    odom0_nodelay: true
+
+    # --- IMU: trust yaw rate only -------------------------------------------
+    # The MPU6050's accelerometers are too noisy on a vibrating chassis to be
+    # worth fusing, and a gyro-only yaw estimate would drift without bound, so
+    # we hand the filter the *rate* and let it integrate.
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+    imu0_queue_size: 20
+    imu0_differential: false
+    imu0_relative: true          # zero the gyro bias against the first reading
+    imu0_nodelay: true
+    imu0_remove_gravitational_acceleration: true
+
+    # --- tuning --------------------------------------------------------------
+    # Diagonal of the process noise covariance. Raise an entry to let the
+    # filter move faster in that dimension (trust the model less).
+    process_noise_covariance: [0.02, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.02, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.02, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.005, 0.0, 0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.005, 0.0, 0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01]

@@ -1,0 +1,40 @@
+# =============================================================================
+#  twist_mux  --  arbitrates between the things that want to drive the robot.
+#
+#  Highest priority wins while it is publishing; when it goes quiet for
+#  `timeout` seconds the next one down takes over. This is what lets you grab
+#  the joystick mid-navigation and have the robot immediately obey you.
+#
+#  Output is remapped in control.launch.py to
+#      /diff_drive_controller/cmd_vel_unstamped
+# =============================================================================
+
+twist_mux:
+  ros__parameters:
+    use_sim_time: false
+
+    topics:
+      joystick:
+        topic: /cmd_vel_joy
+        timeout: 0.5
+        priority: 100
+
+      keyboard:
+        topic: /cmd_vel_key
+        timeout: 0.5
+        priority: 90
+
+      # Nav2's velocity_smoother output. This is what Nav2 normally drives
+      # through, and it is the one you want winning when nobody is teleoping.
+      navigation:
+        topic: /cmd_vel_smoothed
+        timeout: 0.5
+        priority: 20
+
+      # Nav2's controller_server output, before smoothing. Listed as a lower
+      # priority fallback so navigation still works if you disable the
+      # velocity smoother.
+      navigation_raw:
+        topic: /cmd_vel
+        timeout: 0.5
+        priority: 10

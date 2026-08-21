@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!--
+  base_footprint  : projection of the robot onto the ground plane. Nav2 and the
+                    costmaps are happiest with this as the reference.
+  base_link       : origin at the wheel axle height, on the robot's centreline.
+                    Everything else hangs off this.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_height}"/>
+      </geometry>
+      <material name="chassis_grey"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_height}"/>
+      </geometry>
+    </collision>
+
+    <xacro:inertial_cylinder mass="${base_mass}" radius="${base_radius}" length="${base_height}">
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <!-- ==========================================================
+       Ball casters (front and rear) - fixed joints, they are only
+       there so the model does not look like it is levitating.
+       ========================================================== -->
+  <xacro:macro name="caster" params="name x">
+    <link name="${name}_caster">
+      <visual>
+        <geometry><sphere radius="${caster_radius}"/></geometry>
+        <material name="caster_silver"/>
+      </visual>
+      <collision>
+        <geometry><sphere radius="${caster_radius}"/></geometry>
+      </collision>
+      <xacro:inertial_sphere mass="0.005" radius="${caster_radius}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:inertial_sphere>
+    </link>
+
+    <joint name="${name}_caster_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${name}_caster"/>
+      <origin xyz="${x} 0 ${caster_radius - wheel_radius}" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:caster name="front" x="${caster_x}"/>
+  <xacro:caster name="rear"  x="${-caster_x}"/>
+
+</robot>

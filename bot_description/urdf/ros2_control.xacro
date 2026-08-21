@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+  ros2_control hardware description.
+
+  With use_mock_hardware:=true the whole ESP32 is replaced by
+  mock_components/GenericSystem, which simply integrates the velocity commands.
+  That lets you bring up diff_drive_controller, the EKF, SLAM and Nav2 on a
+  desk with no robot attached - very useful for debugging launch files.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <ros2_control name="BotSystem" type="system">
+
+    <hardware>
+      <xacro:if value="$(arg use_mock_hardware)">
+        <plugin>mock_components/GenericSystem</plugin>
+        <!-- integrate velocity commands into a position state -->
+        <param name="calculate_dynamics">true</param>
+      </xacro:if>
+
+      <xacro:unless value="$(arg use_mock_hardware)">
+        <plugin>bot_hardware/DiffDriveMicroRos</plugin>
+        <param name="left_wheel_name">left_wheel_joint</param>
+        <param name="right_wheel_name">right_wheel_joint</param>
+        <param name="cmd_topic">$(arg wheel_cmd_topic)</param>
+        <param name="state_topic">$(arg wheel_state_topic)</param>
+        <!-- If no /wheel_state message arrives for this long, the interface
+             reports an error and the controller manager will stop the
+             controllers rather than drive blind. -->
+        <param name="state_timeout_sec">1.0</param>
+      </xacro:unless>
+    </hardware>
+
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-${max_wheel_rad_s}</param>
+        <param name="max"> ${max_wheel_rad_s}</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-${max_wheel_rad_s}</param>
+        <param name="max"> ${max_wheel_rad_s}</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+  </ros2_control>
+
+</robot>

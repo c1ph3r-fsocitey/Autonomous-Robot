@@ -1,0 +1,23 @@
+# =============================================================================
+#  imu_filter_madgwick:  /imu/data_raw  ->  /imu/data
+#
+#  The MPU6050 has no magnetometer, so this cannot give you an absolute
+#  heading - only a gravity-referenced roll/pitch and an integrated yaw. That
+#  is fine: the EKF only consumes the yaw *rate*, which passes through this
+#  filter untouched. The orientation is here so RViz and any future code that
+#  wants /imu/data has something sensible to look at.
+# =============================================================================
+
+imu_filter_madgwick:
+  ros__parameters:
+    use_sim_time: false
+
+    use_mag: false            # no magnetometer on an MPU6050
+    world_frame: "enu"        # ROS REP-103: X east, Y north, Z up
+    publish_tf: false         # the EKF owns TF, not this node
+    fixed_frame: "odom"
+    gain: 0.05                # lower = trust the gyro more, smoother but drifts
+    zeta: 0.002               # gyro bias estimation rate
+    orientation_stddev: 0.02
+    remove_gravity_vector: false
+    stateless: false

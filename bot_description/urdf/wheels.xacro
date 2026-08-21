@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  Drive wheels. Joint names MUST match the ones in
+  bot_bringup/config/controllers.yaml and in ros2_control.xacro:
+      left_wheel_joint / right_wheel_joint
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="drive_wheel" params="prefix y_sign">
+    <link name="${prefix}_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="wheel_black"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+
+      <xacro:inertial_cylinder mass="${wheel_mass}" radius="${wheel_radius}" length="${wheel_width}">
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      </xacro:inertial_cylinder>
+    </link>
+
+    <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${prefix}_wheel"/>
+      <origin xyz="${wheel_x_offset} ${y_sign * wheel_separation / 2} 0" rpy="0 0 0"/>
+      <!-- Both wheels rotate about +Y (robot-left). A positive joint velocity
+           therefore drives the robot forward on BOTH sides - the mirroring is
+           handled in the firmware, not here. -->
+      <axis xyz="0 1 0"/>
+      <limit effort="1.0" velocity="${max_wheel_rad_s}"/>
+      <dynamics damping="0.01" friction="0.001"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:drive_wheel prefix="left"  y_sign="1"/>
+  <xacro:drive_wheel prefix="right" y_sign="-1"/>
+
+</robot>

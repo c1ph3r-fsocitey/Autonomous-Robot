@@ -1,0 +1,35 @@
+# =============================================================================
+#  Joystick teleop. Axis/button numbers below are for an Xbox-style pad.
+#  Check yours with:  ros2 topic echo /joy
+# =============================================================================
+
+joy_node:
+  ros__parameters:
+    use_sim_time: false
+    device_id: 0
+    deadzone: 0.10
+    autorepeat_rate: 20.0
+
+teleop_twist_joy_node:
+  ros__parameters:
+    use_sim_time: false
+
+    # Hold LB (button 4) to drive at normal speed.
+    require_enable_button: true
+    enable_button: 4
+    # Hold RB (button 5) as well for turbo.
+    enable_turbo_button: 5
+
+    axis_linear:
+      x: 1              # left stick, vertical
+    scale_linear:
+      x: 0.14
+    scale_linear_turbo:
+      x: 0.22
+
+    axis_angular:
+      yaw: 3            # right stick, horizontal
+    scale_angular:
+      yaw: 1.20
+    scale_angular_turbo:
+      yaw: 2.00

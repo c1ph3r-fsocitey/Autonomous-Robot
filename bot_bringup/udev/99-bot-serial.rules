@@ -1,0 +1,64 @@
+# =============================================================================
+#  Stable names for the robot's two USB serial devices.
+#
+#      /dev/esp32    -> the ESP32 running the micro-ROS firmware
+#      /dev/rplidar  -> the RPLidar A1M8
+#
+#  Install:
+#     sudo bash ~/ros2_ws/src/bot_bringup/udev/install_udev.sh
+#
+#  ---------------------------------------------------------------------------
+#  ON THIS ROBOT the two devices land on different subsystems already:
+#      ESP32   -> /dev/ttyACM0   (USB CDC: native ESP32-S2/S3, or a CH343/CH9102)
+#      RPLidar -> /dev/ttyUSB0   (CP2102 USB-serial bridge)
+#  so they cannot swap with each other. The symlinks are still worth having:
+#  they survive a second ACM/USB device being plugged in, and they keep the
+#  launch files readable.
+#
+#  If BOTH your devices ever end up as CP2102s on /dev/ttyUSB*, see the
+#  "SAME CHIP ON BOTH" section at the bottom.
+# =============================================================================
+
+# --- ESP32 -------------------------------------------------------------------
+# Espressif native USB (ESP32-S2 / S3 / C3). Enumerates as /dev/ttyACM*.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", SYMLINK+="esp32", MODE="0666", GROUP="dialout"
+
+# WCH bridges - CH340 (7523), CH341 (5523), CH343 (55d3), CH9102 (55d4).
+# The newer ones present a CDC-ACM interface and come up as /dev/ttyACM*.
+# Matching the whole vendor is deliberate: the RPLidar is a Silicon Labs part,
+# so there is no chance of this rule stealing it.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", SYMLINK+="esp32", MODE="0666", GROUP="dialout"
+
+# FTDI, used by a few ESP32 boards.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="esp32", MODE="0666", GROUP="dialout"
+
+# --- RPLidar A1M8 ------------------------------------------------------------
+# Silicon Labs CP2102. This is what the stock A1M8 USB adapter uses.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="rplidar", MODE="0666", GROUP="dialout"
+
+# =============================================================================
+#  CHECKING WHAT YOU ACTUALLY HAVE
+#
+#      lsusb
+#      udevadm info -a -n /dev/ttyACM0 | grep -E 'idVendor|idProduct|\{serial\}' | head -6
+#      udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct|\{serial\}' | head -6
+#
+#  After editing this file:
+#      sudo udevadm control --reload-rules && sudo udevadm trigger
+#      # then unplug and replug, and check:
+#      ls -l /dev/esp32 /dev/rplidar
+# =============================================================================
+
+# =============================================================================
+#  SAME CHIP ON BOTH  (only relevant if both are CP2102s on /dev/ttyUSB*)
+#
+#  idVendor/idProduct cannot tell them apart, so match on serial number:
+#
+#  1. Plug in ONLY the ESP32:
+#         udevadm info -a -n /dev/ttyUSB0 | grep 'ATTRS{serial}' | head -1
+#  2. Plug in ONLY the lidar, repeat.
+#  3. Replace the CP2102 line above with two serial-matched rules:
+#
+#     SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{serial}=="<ESP32_SERIAL>",  SYMLINK+="esp32",   MODE="0666", GROUP="dialout"
+#     SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{serial}=="<LIDAR_SERIAL>",  SYMLINK+="rplidar", MODE="0666", GROUP="dialout"
+# =============================================================================

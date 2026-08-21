@@ -1,0 +1,95 @@
+# =============================================================================
+#  ros2_control controller manager + controller configuration
+#
+#  Geometry here MUST agree with bot_description/urdf/bot.urdf.xacro:
+#      wheel_separation = 0.180   (wheel_separation property)
+#      wheel_radius     = 0.0215  (wheel_radius property)
+#  and the calibrated multipliers below let you correct them without
+#  re-flashing anything. See docs/CALIBRATION.md.
+# =============================================================================
+
+controller_manager:
+  ros__parameters:
+    update_rate: 50          # Hz. Matches the ESP32's 50 Hz control loop.
+    use_sim_time: false
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+
+joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: false
+
+
+diff_drive_controller:
+  ros__parameters:
+    use_sim_time: false
+
+    left_wheel_names:  ["left_wheel_joint"]
+    right_wheel_names: ["right_wheel_joint"]
+
+    wheel_separation: 0.180
+    wheel_radius: 0.0215
+
+    # --- calibration trims ---------------------------------------------------
+    # Leave at 1.0 until you have run the odometry calibration. Then:
+    #   robot turns short/long over a straight run -> wheel radius multipliers
+    #   robot over/under-rotates on a spin test    -> wheel_separation_multiplier
+    wheel_separation_multiplier: 1.0
+    left_wheel_radius_multiplier: 1.0
+    right_wheel_radius_multiplier: 1.0
+
+    # --- odometry ------------------------------------------------------------
+    publish_rate: 50.0
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+
+    # Integrate encoder positions rather than velocities: much less drift on
+    # cheap encoders, because velocity noise averages out of the position.
+    position_feedback: true
+    open_loop: false
+
+    # IMPORTANT: robot_localization (the EKF) publishes odom -> base_footprint.
+    # If this were true you would have two publishers fighting over the same
+    # transform and TF would flap.
+    enable_odom_tf: false
+
+    pose_covariance_diagonal:  [0.001, 0.001, 1e6, 1e6, 1e6, 0.03]
+    twist_covariance_diagonal: [0.001, 0.001, 1e6, 1e6, 1e6, 0.03]
+
+    # --- command input -------------------------------------------------------
+    # false -> subscribe to geometry_msgs/Twist on ~/cmd_vel_unstamped, which is
+    # what teleop_twist_keyboard, teleop_twist_joy, twist_mux and Nav2 all send.
+    use_stamped_vel: false
+    cmd_vel_timeout: 0.5      # seconds without a command before we stop
+    publish_limited_velocity: true
+
+    # --- limits --------------------------------------------------------------
+    # Measured ceiling is 12 rad/s per wheel = 0.258 m/s, verified by
+    # `wheel_jog.py --sweep` (tracking within 0.2% the whole way, no
+    # saturation). We operate at 0.22 m/s - about 10.2 rad/s - which leaves
+    # ~15% headroom for the PID to reject carpet, slopes and a sagging
+    # battery. Running at the measured maximum leaves nothing to correct with.
+    linear:
+      x:
+        has_velocity_limits: true
+        has_acceleration_limits: true
+        has_jerk_limits: false
+        max_velocity: 0.22
+        min_velocity: -0.22
+        max_acceleration: 0.60
+        min_acceleration: -0.60
+
+    angular:
+      z:
+        has_velocity_limits: true
+        has_acceleration_limits: true
+        has_jerk_limits: false
+        max_velocity: 2.00
+        min_velocity: -2.00
+        max_acceleration: 3.00
+        min_acceleration: -3.00

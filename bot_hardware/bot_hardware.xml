@@ -1,0 +1,12 @@
+<library path="bot_hardware">
+  <class name="bot_hardware/DiffDriveMicroRos"
+         type="bot_hardware::DiffDriveMicroRos"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control system interface for a two-wheel differential drive base whose
+      motors and encoders are handled by an ESP32 running micro-ROS. Wheel velocity
+      commands are published as a Float32MultiArray; wheel position/velocity feedback
+      is received on a Float32MultiArray.
+    </description>
+  </class>
+</library>

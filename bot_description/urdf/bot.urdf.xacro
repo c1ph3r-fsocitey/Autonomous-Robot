@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!--
+  Top-level robot description.
+
+  Every dimension the robot actually cares about is a property here.
+  Change a number in this file and the URDF, the controller config that reads
+  it, and RViz all stay consistent.
+
+  Render it to plain URDF to inspect:
+      xacro bot.urdf.xacro > /tmp/bot.urdf && check_urdf /tmp/bot.urdf
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="bot">
+
+  <!-- ==========================================================
+       Arguments
+       ========================================================== -->
+  <!-- true  -> mock_components/GenericSystem, no ESP32 needed
+       false -> the real bot_hardware micro-ROS bridge -->
+  <xacro:arg name="use_mock_hardware" default="false"/>
+
+  <!-- Topics the hardware interface uses to talk to the ESP32 -->
+  <xacro:arg name="wheel_cmd_topic"   default="/wheel_cmd"/>
+  <xacro:arg name="wheel_state_topic" default="/wheel_state"/>
+
+  <!-- ==========================================================
+       Geometry  (metres / kg)
+       ========================================================== -->
+  <!-- Circular chassis: 170 mm diameter -->
+  <xacro:property name="base_radius"    value="0.085"/>
+  <xacro:property name="base_height"    value="0.060"/>
+  <xacro:property name="base_mass"      value="0.900"/>
+
+  <!-- Wheels: 43 mm diameter. Wheel separation (track) is 180 mm, so each
+       wheel centre sits 90 mm off the centreline - slightly outside the
+       chassis edge, which matches the build. -->
+  <xacro:property name="wheel_radius"     value="0.0215"/>
+  <xacro:property name="wheel_width"      value="0.018"/>
+  <xacro:property name="wheel_separation" value="0.180"/>
+  <xacro:property name="wheel_mass"       value="0.030"/>
+  <!-- Wheels sit on the centre line of the chassis (x = 0). Move this if your
+       axle is forward or aft of centre. -->
+  <xacro:property name="wheel_x_offset"   value="0.0"/>
+
+  <!-- Ball casters, front and rear -->
+  <xacro:property name="caster_radius"    value="0.008"/>
+  <xacro:property name="caster_x"         value="0.062"/>
+
+  <!-- RPLidar A1M8 mount, relative to base_link -->
+  <xacro:property name="lidar_x"          value="0.0"/>
+  <xacro:property name="lidar_y"          value="0.0"/>
+  <xacro:property name="lidar_z"          value="0.100"/>
+  <!-- Rotate the laser frame if the lidar's zero-degree mark does not point
+       straight ahead. See docs/CALIBRATION.md, "Lidar alignment". -->
+  <xacro:property name="lidar_yaw"        value="0.0"/>
+
+  <!-- MPU6050 mount, relative to base_link -->
+  <xacro:property name="imu_x"            value="0.0"/>
+  <xacro:property name="imu_y"            value="0.0"/>
+  <xacro:property name="imu_z"            value="0.040"/>
+
+  <!-- Command limits -->
+  <xacro:property name="max_wheel_rad_s"  value="14.0"/>
+
+  <!-- ==========================================================
+       Includes
+       ========================================================== -->
+  <xacro:include filename="$(find bot_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find bot_description)/urdf/inertial_macros.xacro"/>
+  <xacro:include filename="$(find bot_description)/urdf/base.xacro"/>
+  <xacro:include filename="$(find bot_description)/urdf/wheels.xacro"/>
+  <xacro:include filename="$(find bot_description)/urdf/sensors.xacro"/>
+  <xacro:include filename="$(find bot_description)/urdf/ros2_control.xacro"/>
+
+</robot>

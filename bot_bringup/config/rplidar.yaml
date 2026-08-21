@@ -1,0 +1,23 @@
+# =============================================================================
+#  RPLidar A1M8
+#
+#  serial_port points at the udev symlink created by
+#  bot_bringup/udev/99-bot-serial.rules. Without that rule the lidar and the
+#  ESP32 fight over /dev/ttyUSB0 and whichever enumerates first wins - which
+#  is exactly the sort of bug that only shows up when you demo the robot.
+# =============================================================================
+
+rplidar_node:
+  ros__parameters:
+    use_sim_time: false
+
+    channel_type: serial
+    serial_port: /dev/rplidar
+    serial_baudrate: 115200     # A1M8 is 115200; A2 is 256000
+    frame_id: laser_frame
+    inverted: false
+    angle_compensate: true
+    scan_mode: Standard         # A1M8: Standard (~8 kHz) or Boost (~4 kHz, 8 m)
+
+    # A1M8 is specified to 12 m but returns are unreliable past ~8 m indoors.
+    # slam_toolbox and the costmaps each have their own range clamp too.

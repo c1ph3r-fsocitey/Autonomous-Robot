@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>my_robot</name>
+  <version>0.0.1</version>
+  <description>My differential drive robot</description>
+  <maintainer email="you@email.com">you</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>robot_localization</depend>
+  <depend>rplidar_ros</depend>
+  <depend>slam_toolbox</depend>
+  <depend>nav2_bringup</depend>
+  <depend>joy</depend>
+  <depend>teleop_twist_joy</depend>
+
+  <exec_depend>python3-rclpy</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

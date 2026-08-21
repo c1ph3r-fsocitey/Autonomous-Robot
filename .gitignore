@@ -1,0 +1,52 @@
+# =============================================================================
+#  Generated output. None of this belongs in git - it is rebuilt by colcon
+#  and PlatformIO from the sources that DO belong here.
+#
+#  This is why a naive copy of the workspace came to 90k files: build/ and
+#  install/ alone account for the vast majority of them.
+# =============================================================================
+
+# --- colcon ------------------------------------------------------------------
+build/
+install/
+log/
+.colcon_install_layout
+COLCON_IGNORE
+
+# --- PlatformIO --------------------------------------------------------------
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- ROS runtime -------------------------------------------------------------
+*.bag
+*.db3
+*.db3-shm
+*.db3-wal
+
+# --- third-party sources ------------------------------------------------------
+# rplidar_ros is upstream code with its own git history. Do not vendor it -
+# clone it when setting up a new machine:
+#     git clone -b ros2 https://github.com/Slamtec/rplidar_ros.git
+rplidar_ros/
+
+# --- editors / OS -------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# =============================================================================
+#  DELIBERATELY NOT IGNORED
+#
+#  bot_navigation/maps/   - a saved map is a real artefact worth versioning.
+#                           They are small (a few hundred KB) and losing one
+#                           means re-driving the whole house.
+# =============================================================================

@@ -39,7 +39,7 @@ diff_drive_controller:
     # Leave at 1.0 until you have run the odometry calibration. Then:
     #   robot turns short/long over a straight run -> wheel radius multipliers
     #   robot over/under-rotates on a spin test    -> wheel_separation_multiplier
-    wheel_separation_multiplier: 1.0
+    wheel_separation_multiplier: 1.065
     left_wheel_radius_multiplier: 1.0
     right_wheel_radius_multiplier: 1.0
 
